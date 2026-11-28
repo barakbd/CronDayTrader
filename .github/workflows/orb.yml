@@ -1,0 +1,32 @@
+name: ORB bot
+
+on:
+  schedule:
+    # 8:00 AM New York in winter, 9:00 AM in summer
+    - cron: '0 13 * * 1-5'
+    # 9:00 AM New York in winter, 10:00 AM in summer
+    - cron: '0 14 * * 1-5'
+  workflow_dispatch:   # lets you run it by hand from the Actions tab
+
+# Never let two runs overlap: a second run waits for the first to finish.
+concurrency:
+  group: orb-bot
+  cancel-in-progress: false
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    environment: dev
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install alpaca-py pyyaml google-api-python-client google-auth
+      - run: python bot.py
+        env:
+          ALPACA_KEY: ${{ secrets.ALPACA_KEY_ORB }}
+          ALPACA_SECRET: ${{ secrets.ALPACA_SECRET_ORB }}
+          GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
